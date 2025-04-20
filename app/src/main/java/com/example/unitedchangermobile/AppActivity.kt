@@ -3,6 +3,7 @@ package com.example.unitedchangermobile
 import android.os.Bundle
 import android.graphics.Color
 import android.graphics.Paint
+import android.os.Build
 import android.widget.*
 import com.github.mikephil.charting.charts.CandleStickChart
 import com.github.mikephil.charting.components.XAxis
@@ -17,8 +18,9 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import org.json.JSONObject
+
 
 class AppActivity : AppCompatActivity() {
     private lateinit var convertOne: TextView
@@ -88,25 +90,27 @@ class AppActivity : AppCompatActivity() {
         fetchExchangeRate("USD", "RUB")
 
         spinnerFrom.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val fromCurrency = parent?.getItemAtPosition(position).toString()
                 val toCurrency = spinnerTo.selectedItem.toString()
                 updateConvertText(convertOne, fromCurrency, currentAmount)
                 updateFlagImage(flagFrom, fromCurrency)
                 fetchExchangeRate(fromCurrency, toCurrency)
-                fetchOHLCData(fromCurrency, toCurrency)  // Fetch OHLC data on currency change
+                fetchOHLCData(fromCurrency, toCurrency)
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
         spinnerTo.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val fromCurrency = spinnerFrom.selectedItem.toString()
                 val toCurrency = parent?.getItemAtPosition(position).toString()
                 updateFlagImage(flagTo, toCurrency)
                 fetchExchangeRate(fromCurrency, toCurrency)
-                fetchOHLCData(fromCurrency, toCurrency)  // Fetch OHLC data on currency change
+                fetchOHLCData(fromCurrency, toCurrency)
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -158,9 +162,18 @@ class AppActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun fetchOHLCData(fromCurrency: String, toCurrency: String) {
-        val apiKey = "YOUR_ALPHAVANTAGE_API_KEY"  // Замените на ваш ключ API
-        val url = "https://www.alphavantage.co/query?function=FX_DAILY&from_symbol=$fromCurrency&to_symbol=$toCurrency&apikey=$apiKey&outputsize=compact"
+        val apiKey = "ngWsVhp8LdQkGHyQMubo"
+
+        val endDate = java.time.LocalDate.now()
+        val startDate = endDate.minusDays(30)
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val startDateStr = startDate.format(formatter)
+        val endDateStr = endDate.format(formatter)
+
+        val currencyPair = "$fromCurrency$toCurrency"
+        val url = "https://marketdata.tradermade.com/api/v1/timeseries?currency=$currencyPair&api_key=$apiKey&start_date=$startDateStr&end_date=$endDateStr&format=records&interval=daily"
 
         val queue = Volley.newRequestQueue(this)
 
@@ -168,52 +181,48 @@ class AppActivity : AppCompatActivity() {
             Request.Method.GET, url, null,
             { response ->
                 try {
-                    val timeSeries = response.getJSONObject("Time Series FX (Daily)")
+                    val quotesArray = response.getJSONArray("quotes")
 
-                    val dates = ArrayList<String>()
                     val entries = ArrayList<CandleEntry>()
+                    val dates = ArrayList<String>()
 
-                    val keys = timeSeries.keys()
-                    var index = 0
+                    var index = 0f
+                    for (i in 0 until quotesArray.length()) {
+                        val quote = quotesArray.getJSONObject(i)
 
-                    // Итерация по последним 7 дням
-                    while (keys.hasNext() && index < 7) {
-                        val date = keys.next()
-                        val data = timeSeries.getJSONObject(date)
+                        // Пропускаем, если какие-либо данные отсутствуют
+                        if (quote.isNull("open") || quote.isNull("high") || quote.isNull("low") || quote.isNull("close")) continue
 
-                        // Получаем данные OHLC
-                        val open = data.getString("1. open").toFloat()
-                        val high = data.getString("2. high").toFloat()
-                        val low = data.getString("3. low").toFloat()
-                        val close = data.getString("4. close").toFloat()
+                        val open = quote.getDouble("open").toFloat()
+                        val high = quote.getDouble("high").toFloat()
+                        val low = quote.getDouble("low").toFloat()
+                        val close = quote.getDouble("close").toFloat()
+                        val date = quote.getString("date")
 
-                        // Добавляем данные для графика
                         entries.add(CandleEntry(index.toInt(), high, low, open, close))
                         dates.add(date)
-
-                        index++
+                        index += 1
                     }
 
-                    // Обновляем график
-                    updateCandleChart(entries, dates)
+                    updateCandleChart(entries, dates, fromCurrency, toCurrency)
 
                 } catch (e: Exception) {
-                    Toast.makeText(this, "Error parsing response", Toast.LENGTH_SHORT).show()
+                    e.printStackTrace()
+                    Toast.makeText(this, "Error parsing OHLC response", Toast.LENGTH_SHORT).show()
                 }
             },
             { error ->
-                Toast.makeText(this, "Error fetching data: ${error.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error fetching OHLC data: ${error.message}", Toast.LENGTH_SHORT).show()
             }
         )
 
         queue.add(jsonObjectRequest)
     }
 
-    private fun updateCandleChart(entries: ArrayList<CandleEntry>, dates: ArrayList<String>) {
+    private fun updateCandleChart(entries: ArrayList<CandleEntry>, dates: ArrayList<String>, fromCurrency: String, toCurrency: String) {
         val candlechart: CandleStickChart = findViewById(R.id.candlechart)
 
-        // Создаем данные для графика
-        val candleDataSet = CandleDataSet(entries, "Currency Chart")
+        val candleDataSet = CandleDataSet(entries, "$fromCurrency -> $toCurrency")
         candleDataSet.color = Color.rgb(80, 80, 80)
         candleDataSet.shadowColor = Color.rgb(0, 196, 122)
         candleDataSet.shadowWidth = 1f
@@ -229,6 +238,11 @@ class AppActivity : AppCompatActivity() {
 
         val xAxis = candlechart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
-        xAxis.setDrawGridLines(false)
+
+
+
+        candlechart.axisLeft.setDrawLabels(true)
+
+        candlechart.invalidate()
     }
 }
