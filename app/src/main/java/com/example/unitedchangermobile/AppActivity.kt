@@ -216,7 +216,7 @@ class AppActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun fetchOHLCData(fromCurrency: String, toCurrency: String) {
-        val apiKey = "ngWsVhp8LdQkGHyQMubo"
+        val apiKey = "YOUR_API_KEY"
 
         val endDate = java.time.LocalDate.now()
         val startDate = endDate.minusDays(30)
