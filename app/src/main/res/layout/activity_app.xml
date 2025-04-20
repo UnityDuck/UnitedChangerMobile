@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#241f1f"
+    tools:context=".AppActivity">
+
+    <TextView
+        android:id="@+id/ConvertTwo"
+        android:layout_width="132dp"
+        android:layout_height="33dp"
+        android:layout_alignBottom="@+id/candlechart"
+        android:layout_marginEnd="-364dp"
+        android:layout_marginBottom="-169dp"
+        android:layout_toStartOf="@+id/candlechart"
+        android:textSize="17dp" />
+
+    <ImageView
+        android:id="@+id/arrowBetweenSpinners2"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_below="@+id/arrowBetweenSpinners"
+        android:layout_alignStart="@+id/candlechart"
+        android:layout_marginStart="181dp"
+        android:layout_marginTop="62dp"
+        android:src="@android:drawable/ic_media_next" />
+
+    <com.github.mikephil.charting.charts.CandleStickChart
+        android:id="@+id/candlechart"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_alignParentTop="true"
+        android:layout_margin="10dp" />
+
+    <Spinner
+        android:id="@+id/spinnerFrom"
+        android:layout_width="100dp"
+        android:layout_height="38dp"
+        android:layout_alignBottom="@+id/candlechart"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="-119dp"
+        android:layout_toLeftOf="@+id/arrowBetweenSpinners"
+        android:minWidth="0dp"
+        android:padding="0dp"
+        android:textAlignment="center" />
+
+    <ImageView
+        android:id="@+id/arrowBetweenSpinners"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_below="@+id/candlechart"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:src="@android:drawable/ic_media_next" />
+
+    <Spinner
+        android:id="@+id/spinnerTo"
+        android:layout_width="100dp"
+        android:layout_height="38dp"
+        android:layout_alignBottom="@+id/candlechart"
+        android:layout_marginStart="33dp"
+        android:layout_marginLeft="-3dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="-118dp"
+        android:layout_toEndOf="@+id/spinnerFrom"
+        android:layout_toRightOf="@+id/arrowBetweenSpinners"
+        android:minWidth="0dp"
+        android:padding="0dp"
+        android:textAlignment="center" />
+
+    <ImageView
+        android:id="@+id/flagFrom"
+        android:layout_width="80dp"
+        android:layout_height="60dp"
+        android:layout_alignBottom="@+id/candlechart"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="102dp"
+        android:layout_marginLeft="29dp"
+        android:layout_marginBottom="-81dp" />
+
+    <ImageView
+        android:id="@+id/flagTo"
+        android:layout_width="80dp"
+        android:layout_height="60dp"
+        android:layout_alignBottom="@+id/candlechart"
+        android:layout_alignParentEnd="true"
+        android:layout_marginLeft="8dp"
+        android:layout_marginEnd="103dp"
+        android:layout_marginBottom="-81dp" />
+
+    <TextView
+        android:id="@+id/ConvertOne"
+        android:layout_width="70dp"
+        android:layout_height="29dp"
+        android:layout_alignBottom="@+id/candlechart"
+        android:layout_marginEnd="-196dp"
+        android:layout_marginBottom="-165dp"
+        android:layout_toStartOf="@+id/candlechart"
+        android:text="TextView"
+        android:textSize="17dp" />
+
+</RelativeLayout>
