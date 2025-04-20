@@ -7,6 +7,18 @@
     tools:context=".AppActivity">
 
     <TextView
+        android:id="@+id/convertOne"
+        android:layout_width="72dp"
+        android:layout_height="59dp"
+        android:layout_alignBottom="@+id/candlechart"
+        android:layout_marginEnd="-211dp"
+        android:layout_marginBottom="-239dp"
+        android:layout_toStartOf="@+id/candlechart"
+        android:text="USD"
+        android:textColor="#bfbbba"
+        android:textSize="17dp" />
+
+    <TextView
         android:id="@+id/ConvertTwo"
         android:layout_width="132dp"
         android:layout_height="33dp"
@@ -98,6 +110,44 @@
         android:layout_marginBottom="-165dp"
         android:layout_toStartOf="@+id/candlechart"
         android:text="TextView"
+        android:textSize="17dp" />
+
+    <EditText
+        android:id="@+id/numberInput"
+        android:layout_width="wrap_content"
+        android:layout_height="38dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="95dp"
+        android:layout_marginTop="482dp"
+        android:background="#241f1f"
+        android:hint="num"
+        android:textColorHint="#bfbbba"
+        android:inputType="numberDecimal"
+        android:textAlignment="center"
+        android:textColor="#bfbbba"
+        android:textSize="16sp" />
+
+    <ImageView
+        android:id="@+id/arrowBetweenInputs"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="190dp"
+        android:layout_marginTop="487dp"
+        android:src="@android:drawable/ic_media_next" />
+
+    <TextView
+        android:id="@+id/ConvertResult"
+        android:layout_width="170dp"
+        android:layout_height="30dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="230dp"
+        android:layout_marginTop="490dp"
+        android:text="Result"
+        android:textColor="#bfbbba"
         android:textSize="17dp" />
 
 </RelativeLayout>

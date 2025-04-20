@@ -24,6 +24,7 @@ import androidx.appcompat.app.AppCompatActivity
 
 class AppActivity : AppCompatActivity() {
     private lateinit var convertOne: TextView
+    private lateinit var convertOneLower: TextView
     private lateinit var convertTwo: TextView
     private lateinit var spinnerFrom: Spinner
     private lateinit var spinnerTo: Spinner
@@ -31,12 +32,15 @@ class AppActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var updateRunnable: Runnable
     private val updateInterval = 1000L
+    private lateinit var numberInput: EditText
+    private lateinit var convertResult: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_app)
 
         convertOne = findViewById(R.id.ConvertOne)
+        convertOneLower = findViewById(R.id.convertOne)
         convertTwo = findViewById(R.id.ConvertTwo)
         spinnerFrom = findViewById(R.id.spinnerFrom)
         spinnerTo = findViewById(R.id.spinnerTo)
@@ -51,6 +55,51 @@ class AppActivity : AppCompatActivity() {
                 handler.postDelayed(this, updateInterval)
             }
         }
+
+        numberInput = findViewById(R.id.numberInput)
+        convertResult = findViewById(R.id.ConvertResult)
+
+        convertResult.text = "0.000 ${spinnerTo.selectedItem}"
+
+        numberInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val input = s.toString()
+                val toCurrency = spinnerTo.selectedItem.toString()
+                val fromCurrency = spinnerFrom.selectedItem.toString()
+
+                if (input.isEmpty()) {
+                    currentAmount = "0"
+                    convertResult.text = "0 $toCurrency"
+                    return
+                }
+
+                try {
+                    val number = input.toDouble()
+
+                    if (number > 9999) {
+                        numberInput.setText("9999")
+                        numberInput.setSelection(numberInput.text.length)
+                        return
+                    }
+
+                    currentAmount = input
+                    fetchExchangeRate(fromCurrency, toCurrency)
+
+                } catch (_: NumberFormatException) {
+                    convertResult.text = "0.000 $toCurrency"
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+        updateConvertOneLabel()
+    }
+
+    private fun updateConvertOneLabel() {
+        val fromCurrency = spinnerFrom.selectedItem.toString()
+        convertOne.setText("1 $fromCurrency")
+        convertOneLower.setText(fromCurrency)
     }
 
     override fun onResume() {
@@ -86,7 +135,6 @@ class AppActivity : AppCompatActivity() {
         updateFlagImage(flagFrom, "USD")
         updateFlagImage(flagTo, "RUB")
 
-        updateConvertText(convertOne, "USD", currentAmount)
         fetchExchangeRate("USD", "RUB")
 
         spinnerFrom.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -94,7 +142,7 @@ class AppActivity : AppCompatActivity() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val fromCurrency = parent?.getItemAtPosition(position).toString()
                 val toCurrency = spinnerTo.selectedItem.toString()
-                updateConvertText(convertOne, fromCurrency, currentAmount)
+                updateConvertOneLabel()
                 updateFlagImage(flagFrom, fromCurrency)
                 fetchExchangeRate(fromCurrency, toCurrency)
                 fetchOHLCData(fromCurrency, toCurrency)
@@ -129,11 +177,17 @@ class AppActivity : AppCompatActivity() {
                     val rate = data.getString("amount")
                     val roundedRate = BigDecimal(rate).setScale(3, RoundingMode.HALF_UP).toString()
 
-                    val convertedAmount = BigDecimal(currentAmount.toDouble() * roundedRate.toDouble())
+                    convertTwo.text = "$roundedRate $toCurrency"
+
+                    val amount = currentAmount.toDoubleOrNull() ?: 0.0
+                    val result = BigDecimal(amount * roundedRate.toDouble())
                         .setScale(3, RoundingMode.HALF_UP)
                         .toString()
 
-                    updateConvertText(convertTwo, toCurrency, convertedAmount)
+                    if (numberInput.text.toString() != "") {
+                        convertResult.text = "$result $toCurrency"
+                    }
+
                 } catch (e: Exception) {
                     Toast.makeText(this, "Error parsing response", Toast.LENGTH_SHORT).show()
                 }
@@ -144,10 +198,7 @@ class AppActivity : AppCompatActivity() {
         )
 
         queue.add(jsonObjectRequest)
-    }
-
-    private fun updateConvertText(textView: TextView, currencyCode: String, amount: String) {
-        textView.text = "$amount $currencyCode"
+        updateConvertOneLabel()
     }
 
     private fun updateFlagImage(imageView: ImageView, currencyCode: String) {
@@ -160,6 +211,7 @@ class AppActivity : AppCompatActivity() {
         if (resourceId != 0) {
             imageView.setImageResource(resourceId)
         }
+        updateConvertOneLabel()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -190,7 +242,6 @@ class AppActivity : AppCompatActivity() {
                     for (i in 0 until quotesArray.length()) {
                         val quote = quotesArray.getJSONObject(i)
 
-                        // Пропускаем, если какие-либо данные отсутствуют
                         if (quote.isNull("open") || quote.isNull("high") || quote.isNull("low") || quote.isNull("close")) continue
 
                         val open = quote.getDouble("open").toFloat()
@@ -217,6 +268,7 @@ class AppActivity : AppCompatActivity() {
         )
 
         queue.add(jsonObjectRequest)
+        updateConvertOneLabel()
     }
 
     private fun updateCandleChart(entries: ArrayList<CandleEntry>, dates: ArrayList<String>, fromCurrency: String, toCurrency: String) {
@@ -244,5 +296,6 @@ class AppActivity : AppCompatActivity() {
         candlechart.axisLeft.setDrawLabels(true)
 
         candlechart.invalidate()
+        updateConvertOneLabel()
     }
 }
