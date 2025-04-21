@@ -21,8 +21,6 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import java.io.File
-import android.os.Environment
 
 
 class AppActivity : AppCompatActivity() {
@@ -40,6 +38,7 @@ class AppActivity : AppCompatActivity() {
     private lateinit var convertButton: Button
     private lateinit var customInput: EditText
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_app)
@@ -112,6 +111,7 @@ class AppActivity : AppCompatActivity() {
         updateConvertOneLabel()
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun exportAllExchangeRatesToCSV() {
         val fileName = customInput.text.toString().trim()
 
@@ -170,30 +170,50 @@ class AppActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun saveMatrixToCSV(fileName: String, currencies: List<String>, matrix: Map<String, Map<String, String>>) {
         try {
-            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            if (!downloadsDir.exists()) downloadsDir.mkdirs()
-
-            val file = File(downloadsDir, "$fileName.csv")
-
-            val builder = StringBuilder()
-            builder.append("From/To,")
-            builder.append(currencies.joinToString(","))
-            builder.append("\n")
+            val content = StringBuilder()
+            content.append("From/To,")
+            content.append(currencies.joinToString(","))
+            content.append("\n")
 
             for (from in currencies) {
-                builder.append(from).append(",")
-                builder.append(currencies.joinToString(",") { to -> matrix[from]?.get(to) ?: "ERR" })
-                builder.append("\n")
+                content.append(from).append(",")
+                content.append(currencies.joinToString(",") { to -> matrix[from]?.get(to) ?: "ERR" })
+                content.append("\n")
             }
 
-            file.writeText(builder.toString())
-            Toast.makeText(this, "Файл сохранён в Загрузки", Toast.LENGTH_LONG).show()
+            val resolver = contentResolver
+            val contentValues = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Downloads.DISPLAY_NAME, "$fileName.csv")
+                put(android.provider.MediaStore.Downloads.MIME_TYPE, "text/csv")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
+                }
+            }
+
+            val uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+            uri?.let {
+                resolver.openOutputStream(uri)?.use { outputStream ->
+                    outputStream.write(content.toString().toByteArray())
+                    outputStream.flush()
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    contentValues.clear()
+                    contentValues.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
+                    resolver.update(uri, contentValues, null, null)
+                }
+
+                Toast.makeText(this, "Файл сохранён в Загрузки", Toast.LENGTH_LONG).show()
+            } ?: run {
+                Toast.makeText(this, "Не удалось создать файл", Toast.LENGTH_SHORT).show()
+            }
 
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Ошибка при сохранении файла", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Ошибка: $e", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -317,7 +337,7 @@ class AppActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun fetchOHLCData(fromCurrency: String, toCurrency: String) {
-        val apiKey = "YOUR_API_KEY"
+        val apiKey = "ngWsVhp8LdQkGHyQMubo"
 
         val endDate = java.time.LocalDate.now()
         val startDate = endDate.minusDays(30)
