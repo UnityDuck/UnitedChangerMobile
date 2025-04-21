@@ -150,4 +150,29 @@
         android:textColor="#bfbbba"
         android:textSize="17dp" />
 
+    <EditText
+        android:id="@+id/customInput"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:background="#241f1f"
+        android:layout_marginTop="530dp"
+        android:hint="Enter the name of csv file"
+        android:textColor="#bfbbba"
+        android:textColorHint="#bfbbba"
+        android:inputType="text"
+        android:padding="10dp"
+        android:textAlignment="center" />
+
+    <Button
+        android:id="@+id/convertButton"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/customInput"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="0dp"
+        android:text="Convert"
+        android:backgroundTint="#3A3A3A"
+        android:textColor="#ffffff" />
+
 </RelativeLayout>

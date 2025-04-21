@@ -1,5 +1,6 @@
 package com.example.unitedchangermobile
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.graphics.Color
 import android.graphics.Paint
@@ -20,6 +21,8 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import java.io.File
+import android.os.Environment
 
 
 class AppActivity : AppCompatActivity() {
@@ -34,6 +37,8 @@ class AppActivity : AppCompatActivity() {
     private val updateInterval = 1000L
     private lateinit var numberInput: EditText
     private lateinit var convertResult: TextView
+    private lateinit var convertButton: Button
+    private lateinit var customInput: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +51,17 @@ class AppActivity : AppCompatActivity() {
         spinnerTo = findViewById(R.id.spinnerTo)
 
         setCandleStickChart()
+
+        convertButton = findViewById(R.id.convertButton)
+        customInput = findViewById(R.id.customInput)
+
+        convertButton.setOnClickListener {
+            exportAllExchangeRatesToCSV()
+        }
+
+        if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
+        }
 
         updateRunnable = object : Runnable {
             override fun run() {
@@ -94,6 +110,91 @@ class AppActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
         updateConvertOneLabel()
+    }
+
+    private fun exportAllExchangeRatesToCSV() {
+        val fileName = customInput.text.toString().trim()
+
+        if (fileName.isEmpty()) {
+            Toast.makeText(this, "Введите имя файла", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val currencies = listOf("USD", "EUR", "GBP", "JPY", "CNY", "PLN", "UAH", "AED", "BYN", "TRY", "RUB", "CAD")
+        val matrix: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
+
+        for (from in currencies) {
+            matrix[from] = mutableMapOf()
+            for (to in currencies) {
+                matrix[from]!![to] = if (from == to) "1.0" else "..."
+            }
+        }
+
+        val totalRequests = currencies.size * (currencies.size - 1)
+        var completedRequests = 0
+
+        val queue = Volley.newRequestQueue(this)
+
+        for (from in currencies) {
+            for (to in currencies) {
+                if (from == to) continue
+
+                val url = "https://api.coinbase.com/v2/prices/$from-$to/spot"
+
+                val request = JsonObjectRequest(
+                    Request.Method.GET, url, null,
+                    { response ->
+                        try {
+                            val rate = response.getJSONObject("data").getString("amount")
+                            matrix[from]!![to] = rate
+                        } catch (e: Exception) {
+                            matrix[from]!![to] = "ERR"
+                        }
+
+                        completedRequests++
+                        if (completedRequests == totalRequests) {
+                            saveMatrixToCSV(fileName, currencies, matrix)
+                        }
+                    },
+                    {
+                        matrix[from]!![to] = "ERR"
+                        completedRequests++
+                        if (completedRequests == totalRequests) {
+                            saveMatrixToCSV(fileName, currencies, matrix)
+                        }
+                    }
+                )
+
+                queue.add(request)
+            }
+        }
+    }
+
+    private fun saveMatrixToCSV(fileName: String, currencies: List<String>, matrix: Map<String, Map<String, String>>) {
+        try {
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            if (!downloadsDir.exists()) downloadsDir.mkdirs()
+
+            val file = File(downloadsDir, "$fileName.csv")
+
+            val builder = StringBuilder()
+            builder.append("From/To,")
+            builder.append(currencies.joinToString(","))
+            builder.append("\n")
+
+            for (from in currencies) {
+                builder.append(from).append(",")
+                builder.append(currencies.joinToString(",") { to -> matrix[from]?.get(to) ?: "ERR" })
+                builder.append("\n")
+            }
+
+            file.writeText(builder.toString())
+            Toast.makeText(this, "Файл сохранён в Загрузки", Toast.LENGTH_LONG).show()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Ошибка при сохранении файла", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun updateConvertOneLabel() {
@@ -216,7 +317,7 @@ class AppActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun fetchOHLCData(fromCurrency: String, toCurrency: String) {
-        val apiKey = "YOUR_API_KEY"
+        val apiKey = "ngWsVhp8LdQkGHyQMubo"
 
         val endDate = java.time.LocalDate.now()
         val startDate = endDate.minusDays(30)
