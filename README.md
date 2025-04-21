@@ -52,17 +52,23 @@
 
 1. Сделайте **fork** репозитория.
 2. Создайте новую ветку:
+
    ```bash
    git checkout -b feature-name
    ```
+
 3. Внесите изменения и закоммитьте:
+
    ```bash
    git commit -m "Добавил новую функцию"
    ```
+
 4. Отправьте изменения:
+
    ```bash
    git push origin feature-name
    ```
+   
 5. Создайте **Pull Request**.
 
 ---
