@@ -23,7 +23,6 @@
 - 🌐 **Volley** [`com.android.volley:volley:1.2.1`] — получение данных с API.
 - 📈 **MPAndroidChart** [`com.github.PhilJay:MPAndroidChart:v2.2.4`] — построение графиков.
 - 🗃 **SQLite** — локальная база данных.
-- 🔄 **ViewModel + LiveData** — реактивность и архитектура.
 - 🎨 **Material Components** — современный и минималистичный UI-дизайн.
 
 ---
