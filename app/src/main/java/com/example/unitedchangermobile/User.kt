@@ -1,5 +1,7 @@
 package com.example.unitedchangermobile
 
-class User(val login: String, val email: String, val pass: String) {
-
-}
+data class User(
+    val username: String,
+    val password: String,
+    val confirmPassword: String? = null
+)

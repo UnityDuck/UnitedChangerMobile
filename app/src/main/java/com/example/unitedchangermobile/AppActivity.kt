@@ -21,6 +21,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 
 
 class AppActivity : AppCompatActivity() {
@@ -42,6 +43,8 @@ class AppActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_app)
+
+        WindowCompat.setDecorFitsSystemWindows(window, true)
 
         convertOne = findViewById(R.id.ConvertOne)
         convertOneLower = findViewById(R.id.convertOne)
@@ -337,7 +340,7 @@ class AppActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun fetchOHLCData(fromCurrency: String, toCurrency: String) {
-        val apiKey = "ngWsVhp8LdQkGHyQMubo"
+        val apiKey = "eGCvr06hXSw0oinclXKs"
 
         val endDate = java.time.LocalDate.now()
         val startDate = endDate.minusDays(30)

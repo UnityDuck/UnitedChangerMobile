@@ -36,12 +36,12 @@
         android:layout_width="220dp"
         android:layout_height="50dp"
         android:ems="10"
-        android:inputType="textEmailAddress"
+        android:inputType="textPassword"
         android:textColorHint="#6a6a6a"
         android:layout_marginTop="25dp"
         android:layout_gravity="center"
         android:textColor="#fdfdfd"
-        android:hint="Email" />
+        android:hint="Пароль" />
 
     <EditText
         android:id="@+id/user_pass"
@@ -53,7 +53,7 @@
         android:layout_marginTop="25dp"
         android:layout_gravity="center"
         android:textColor="#fdfdfd"
-        android:hint="Пароль" />
+        android:hint="Подтвердите пароль" />
 
     <Button
         android:id="@+id/button_reg"
